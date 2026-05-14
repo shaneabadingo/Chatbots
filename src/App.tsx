@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface Message {
@@ -76,14 +75,10 @@ export default function App() {
   const [apiError, setApiError] = useState('')
   const [activeChat, setActiveChat] = useState<string | null>(null)
 
-  // FIXED: removed unused variable warning
   const [, setTick] = useState(true)
 
   const bottomRef = useRef<HTMLDivElement>(null)
-
-  // FIXED: nullable textarea ref
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-
   const streamRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -296,8 +291,10 @@ export default function App() {
       grouped.push({ date: m.date, msgs: [m] })
     }
   })
-}
 
+  const empty = messages.length === 0
+
+  return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -338,19 +335,16 @@ export default function App() {
           font-family: var(--sans); -webkit-font-smoothing: antialiased;
         }
 
-        /* Dot-grid background */
         body::before {
           content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
           background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
           background-size: 24px 24px;
         }
-        /* Vignette */
         body::after {
           content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
           background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
         }
 
-        /* Scanline shimmer */
         @keyframes scan {
           0%   { transform: translateY(-100%); }
           100% { transform: translateY(100vh); }
@@ -363,7 +357,6 @@ export default function App() {
 
         .layout { position: relative; z-index: 1; display: flex; height: 100dvh; width: 100%; }
 
-        /* ── BACKDROP ── */
         .sb-backdrop {
           position: fixed; inset: 0; z-index: 10;
           background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
@@ -371,10 +364,8 @@ export default function App() {
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ── SIDEBAR ── */
         .sidebar {
           flex-shrink: 0; overflow: hidden;
-          width: ${sidebarOpen ? '260px' : '0px'};
           transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
           display: flex; flex-direction: column;
           background: var(--s1);
@@ -383,7 +374,6 @@ export default function App() {
         }
         .sidebar-inner { width: 260px; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Sidebar accent line */
         .sidebar-inner::before {
           content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 1px;
           background: linear-gradient(to bottom, transparent, var(--green), transparent);
@@ -459,10 +449,8 @@ export default function App() {
         .model-id { font-family: var(--mono); font-size: 0.55rem; color: var(--t3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .model-badge { font-family: var(--mono); font-size: 0.5rem; background: var(--green); color: #000; padding: 2px 6px; border-radius: 3px; font-weight: 700; flex-shrink: 0; letter-spacing: 0.04em; }
 
-        /* ── MAIN ── */
         .main { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
 
-        /* ── TOPBAR ── */
         .topbar {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 18px; height: 52px; flex-shrink: 0;
@@ -506,12 +494,10 @@ export default function App() {
         }
         .tb-btn:hover { background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.25); color: var(--red); }
 
-        /* ── MESSAGES ── */
         .msgs { flex: 1; overflow-y: auto; padding: 28px 24px 12px; display: flex; flex-direction: column; }
         .msgs::-webkit-scrollbar { width: 3px; }
         .msgs::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 99px; }
 
-        /* ── EMPTY ── */
         .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; gap: 36px; text-align: center; }
 
         .empty-mark {
@@ -568,7 +554,6 @@ export default function App() {
         .sug-label { font-size: 0.78rem; font-weight: 600; color: var(--text); }
         .sug-sub { font-size: 0.65rem; color: var(--t3); margin-top: 3px; font-weight: 400; }
 
-        /* ── DATE ── */
         .date-group { display: flex; flex-direction: column; margin-bottom: 4px; }
         .date-div {
           display: flex; align-items: center; gap: 10px; margin: 10px 0 16px;
@@ -577,7 +562,6 @@ export default function App() {
         }
         .date-div::before, .date-div::after { content: ''; flex: 1; height: 1px; background: var(--b1); }
 
-        /* ── ROWS ── */
         .row { display: flex; gap: 12px; margin-bottom: 20px; animation: rowIn 0.25s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .row.user { flex-direction: row-reverse; }
@@ -602,7 +586,6 @@ export default function App() {
         .msg-sender { color: var(--t2); font-weight: 500; }
         .row.assistant .msg-sender { color: var(--green); }
 
-        /* ── BUBBLES ── */
         .bubble {
           max-width: min(76%, 640px); padding: 12px 16px;
           font-family: var(--sans); font-size: 0.875rem; line-height: 1.78; font-weight: 300;
@@ -634,7 +617,6 @@ export default function App() {
         .stream-cur::after { content: '█'; color: var(--green); animation: cur 0.5s steps(1) infinite; font-size: 0.8em; margin-left: 2px; opacity: 0.85; }
         @keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
 
-        /* ── ACTIONS ── */
         .msg-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; margin-top: 2px; }
         .row:hover .msg-actions { opacity: 1; }
         .act {
@@ -647,7 +629,6 @@ export default function App() {
         .act.liked { color: #FF6B81; border-color: rgba(255,107,129,0.25); background: rgba(255,107,129,0.06); }
         .act.copied { color: var(--green); border-color: rgba(0,192,122,0.25); background: var(--gf); }
 
-        /* ── THINKING ── */
         .think-row { display: flex; gap: 12px; margin-bottom: 20px; }
         .think-bubble {
           background: var(--s1); border: 1px solid var(--b1);
@@ -666,7 +647,6 @@ export default function App() {
         .td:nth-child(3) { animation: td 1.1s 0.36s infinite; }
         @keyframes td { 0%,80%,100%{transform:scale(0.4);opacity:0.15} 40%{transform:scale(1);opacity:1;box-shadow:0 0 6px var(--green)} }
 
-        /* ── ERROR ── */
         .err-bar {
           display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px;
           padding: 11px 14px; background: rgba(255,71,87,0.06);
@@ -678,7 +658,6 @@ export default function App() {
         .err-x { background: none; border: none; color: #FF6B81; cursor: pointer; font-size: 0.9rem; padding: 0; opacity: 0.6; transition: opacity 0.15s; flex-shrink: 0; }
         .err-x:hover { opacity: 1; }
 
-        /* ── INPUT ── */
         .input-wrap {
           padding: 10px 24px 18px; border-top: 1px solid var(--b1); flex-shrink: 0; position: relative; z-index: 2;
         }
@@ -718,12 +697,9 @@ export default function App() {
         .char-count { font-family: var(--mono); font-size: 0.57rem; color: var(--t4); }
         .char-count.warn { color: var(--red); }
 
-        /* ── RESPONSIVE ── */
         @media (max-width: 767px) {
           .sidebar {
             position: fixed; top: 0; left: 0; bottom: 0; z-index: 11;
-            width: ${sidebarOpen ? '260px' : '0px'} !important;
-            box-shadow: ${sidebarOpen ? '4px 0 40px rgba(0,0,0,0.7)' : 'none'};
           }
           .topbar { padding: 0 12px; height: 48px; }
           .chars-badge { display: none; }
@@ -741,8 +717,6 @@ export default function App() {
           .input-hint { display: none; }
         }
         @media (min-width: 768px) and (max-width: 1023px) {
-          .sidebar { width: ${sidebarOpen ? '240px' : '0px'}; }
-          .sidebar-inner { width: 240px; }
           .msgs { padding: 20px 18px 8px; }
           .input-wrap { padding: 10px 18px 16px; }
           .bubble { max-width: 80%; }
@@ -757,13 +731,18 @@ export default function App() {
         }
       `}</style>
 
-      <div className="scanline"/>
+      <div className="scanline" />
 
-      {isMobile && sidebarOpen && <div className="sb-backdrop" onClick={() => setSidebarOpen(false)}/>}
+      {isMobile && sidebarOpen && (
+        <div className="sb-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
 
       <div className="layout">
         {/* Sidebar */}
-        <aside className="sidebar">
+        <aside
+          className="sidebar"
+          style={{ width: sidebarOpen ? (isMobile ? '260px' : '260px') : '0px' }}
+        >
           <div className="sidebar-inner">
             <div className="sb-head">
               <div className="sb-logo">
@@ -771,9 +750,19 @@ export default function App() {
                 <span className="sb-logo-name">ShanelleAI</span>
                 <span className="sb-logo-ver">v2</span>
               </div>
-              <button className="new-chat" onClick={() => { setMessages([]); setInput(''); setApiError(''); if (isMobile) setSidebarOpen(false) }}>
+              <button
+                className="new-chat"
+                onClick={() => {
+                  setMessages([])
+                  setInput('')
+                  setApiError('')
+                  setActiveChat(null)
+                  if (isMobile) setSidebarOpen(false)
+                }}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 new_conversation()
               </button>
@@ -794,14 +783,15 @@ export default function App() {
                     setTimeout(() => send(item.prompt), 80)
                   }}
                 >
-                  <div className="hist-dot"/>{item.label}
+                  <div className="hist-dot" />
+                  {item.label}
                 </div>
               ))}
             </div>
 
             <div className="sb-footer">
               <div className="model-card">
-                <div className="status-dot"/>
+                <div className="status-dot" />
                 <div className="model-info">
                   <div className="model-label">ShanelleAI</div>
                   <div className="model-id">{MODEL}</div>
@@ -817,24 +807,45 @@ export default function App() {
           {/* Topbar */}
           <div className="topbar">
             <div className="topbar-l">
-              <button className="hamburger" onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle sidebar">
+              <button
+                className="hamburger"
+                onClick={() => setSidebarOpen((p) => !p)}
+                aria-label="Toggle sidebar"
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
               </button>
               <span className="topbar-title">
-                {empty ? '~ ShanelleAI' : <><span style={{color:'var(--t3)'}}>~/</span>{messages.length} message{messages.length !== 1 ? 's' : ''}</>}
+                {empty
+                  ? '~ ShanelleAI'
+                  : (
+                    <>
+                      <span style={{ color: 'var(--t3)' }}>~/</span>
+                      {messages.length} message{messages.length !== 1 ? 's' : ''}
+                    </>
+                  )}
               </span>
               <div className="model-pill">
-                <div className="model-pill-dot"/>
+                <div className="model-pill-dot" />
                 {MODEL}
               </div>
             </div>
             <div className="topbar-r">
-              <div className="chars-badge">{messages.reduce((a, m) => a + m.text.length, 0).toLocaleString()} chars</div>
-              <button className="tb-btn" title="Clear chat" onClick={() => { setMessages([]); setApiError('') }}>
+              <div className="chars-badge">
+                {messages.reduce((a, m) => a + m.text.length, 0).toLocaleString()} chars
+              </div>
+              <button
+                className="tb-btn"
+                title="Clear chat"
+                onClick={() => { setMessages([]); setApiError('') }}
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6M14 11v6" />
                 </svg>
               </button>
             </div>
@@ -844,17 +855,19 @@ export default function App() {
           {empty ? (
             <div className="empty">
               <div className="empty-mark">
-                <div className="empty-mark-ring"/>
-                <div className="empty-mark-ring2"/>
+                <div className="empty-mark-ring" />
+                <div className="empty-mark-ring2" />
                 <div className="empty-mark-core">S</div>
               </div>
               <div className="empty-head">
-                <div className="empty-title">Hi, I'm <em>ShanelleAI</em></div>
+                <div className="empty-title">
+                  Hi, I'm <em>ShanelleAI</em>
+                </div>
                 <div className="empty-sub">// your AI assistant · powered by {MODEL}</div>
               </div>
               <div className="empty-prompt-hint">quick start</div>
               <div className="sug-grid">
-                {SUGGESTIONS.map(s => (
+                {SUGGESTIONS.map((s) => (
                   <button key={s.label} className="sug-card" onClick={() => send(s.label)}>
                     <div className="sug-icon">{s.icon}</div>
                     <div className="sug-label">{s.label}</div>
@@ -865,30 +878,46 @@ export default function App() {
             </div>
           ) : (
             <div className="msgs">
-              {grouped.map(group => (
+              {grouped.map((group) => (
                 <div key={group.date} className="date-group">
                   <div className="date-div">{group.date}</div>
                   {group.msgs.map((msg, idx) => (
-                    <div key={msg.id} className={`row ${msg.role}`} style={{ animationDelay: `${idx * 0.025}s` }}>
+                    <div
+                      key={msg.id}
+                      className={`row ${msg.role}`}
+                      style={{ animationDelay: `${idx * 0.025}s` }}
+                    >
                       <div className={`av ${msg.role === 'assistant' ? 'ai' : 'you'}`}>
                         {msg.role === 'assistant' ? 'S' : 'U'}
                       </div>
                       <div className="msg-body">
                         <div className="msg-meta">
-                          <span className="msg-sender">{msg.role === 'assistant' ? 'ShanelleAI' : 'you'}</span>
+                          <span className="msg-sender">
+                            {msg.role === 'assistant' ? 'ShanelleAI' : 'you'}
+                          </span>
                           <span>{msg.time}</span>
                         </div>
-                        <div className={`bubble ${msg.role === 'assistant' ? 'ai' : 'user'} ${
-                          msg.role === 'assistant' && streaming && msg.displayText !== msg.text ? 'stream-cur' : ''
-                        }`}>
+                        <div
+                          className={`bubble ${msg.role === 'assistant' ? 'ai' : 'user'} ${
+                            msg.role === 'assistant' && streaming && msg.displayText !== msg.text
+                              ? 'stream-cur'
+                              : ''
+                          }`}
+                        >
                           {msg.displayText || msg.text}
                         </div>
                         {msg.role === 'assistant' && (
                           <div className="msg-actions">
-                            <button className={`act ${msg.liked ? 'liked' : ''}`} onClick={() => toggleLike(msg.id)}>
+                            <button
+                              className={`act ${msg.liked ? 'liked' : ''}`}
+                              onClick={() => toggleLike(msg.id)}
+                            >
                               {msg.liked ? '♥' : '♡'} {msg.liked ? 'liked' : 'like'}
                             </button>
-                            <button className={`act ${msg.copied ? 'copied' : ''}`} onClick={() => copyMsg(msg.id, msg.text)}>
+                            <button
+                              className={`act ${msg.copied ? 'copied' : ''}`}
+                              onClick={() => copyMsg(msg.id, msg.text)}
+                            >
                               {msg.copied ? '✓ copied' : '⎘ copy'}
                             </button>
                           </div>
@@ -911,14 +940,17 @@ export default function App() {
                 <div className="think-row">
                   <div className="av ai">S</div>
                   <div className="msg-body">
-                    <div className="msg-meta"><span className="msg-sender">ShanelleAI</span><span>now</span></div>
+                    <div className="msg-meta">
+                      <span className="msg-sender">ShanelleAI</span>
+                      <span>now</span>
+                    </div>
                     <div className="think-bubble">
-                      <div className="td"/><div className="td"/><div className="td"/>
+                      <div className="td" /><div className="td" /><div className="td" />
                     </div>
                   </div>
                 </div>
               )}
-              <div ref={bottomRef}/>
+              <div ref={bottomRef} />
             </div>
           )}
 
@@ -939,13 +971,20 @@ export default function App() {
   )
 }
 
-function InputCard({ input, onChange, onKeyDown, onSend, disabled, textareaRef }: {
+function InputCard({
+  input,
+  onChange,
+  onKeyDown,
+  onSend,
+  disabled,
+  textareaRef,
+}: {
   input: string
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSend: () => void
   disabled: boolean
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
   const [focused, setFocused] = useState(false)
   return (
@@ -963,16 +1002,23 @@ function InputCard({ input, onChange, onKeyDown, onSend, disabled, textareaRef }
             rows={1}
             disabled={disabled}
           />
-          <button className="send" onClick={onSend} disabled={!input.trim() || disabled} aria-label="Send">
+          <button
+            className="send"
+            onClick={onSend}
+            disabled={!input.trim() || disabled}
+            aria-label="Send"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
           </button>
         </div>
         <div className="input-foot">
           <span className="input-hint">↵ send · ⇧↵ newline</span>
-          <span className={`char-count ${input.length > 900 ? 'warn' : ''}`}>{input.length}/1000</span>
+          <span className={`char-count ${input.length > 900 ? 'warn' : ''}`}>
+            {input.length}/1000
+          </span>
         </div>
       </div>
     </div>
