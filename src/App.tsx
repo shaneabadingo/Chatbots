@@ -1,4 +1,4 @@
-```tsx
+
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface Message {
@@ -296,14 +296,6 @@ export default function App() {
       grouped.push({ date: m.date, msgs: [m] })
     }
   })
-
-  const empty = messages.length === 0
-
-  return (
-    <>
-      {/* YOUR JSX UI CONTINUES HERE */}
-    </>
-  )
 }
 
     <>
