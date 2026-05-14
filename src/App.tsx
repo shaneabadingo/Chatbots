@@ -1,3 +1,4 @@
+```tsx
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface Message {
@@ -12,17 +13,31 @@ interface Message {
 }
 
 const now = () => new Date()
-const fmtTime = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+const fmtTime = (d: Date) =>
+  d.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
 const fmtDate = (d: Date) => {
   const today = new Date()
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+
   if (d.toDateString() === today.toDateString()) return 'Today'
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
-  return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
+
+  return d.toLocaleDateString([], {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 const MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash-lite'
+
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`
 
 const SUGGESTIONS = [
@@ -33,10 +48,22 @@ const SUGGESTIONS = [
 ]
 
 const HISTORY = [
-  { label: 'How neural networks learn', prompt: 'Can you explain how neural networks learn in simple terms?' },
-  { label: 'Write a product brief',     prompt: 'Help me write a product brief for a new app idea.' },
-  { label: 'Explain async/await',       prompt: 'Can you explain async/await in JavaScript with examples?' },
-  { label: 'Best practices for APIs',   prompt: 'What are the best practices for designing REST APIs?' },
+  {
+    label: 'How neural networks learn',
+    prompt: 'Can you explain how neural networks learn in simple terms?',
+  },
+  {
+    label: 'Write a product brief',
+    prompt: 'Help me write a product brief for a new app idea.',
+  },
+  {
+    label: 'Explain async/await',
+    prompt: 'Can you explain async/await in JavaScript with examples?',
+  },
+  {
+    label: 'Best practices for APIs',
+    prompt: 'What are the best practices for designing REST APIs?',
+  },
 ]
 
 export default function App() {
@@ -48,9 +75,15 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false)
   const [apiError, setApiError] = useState('')
   const [activeChat, setActiveChat] = useState<string | null>(null)
-  const [tick, setTick] = useState(true)
+
+  // FIXED: removed unused variable warning
+  const [, setTick] = useState(true)
+
   const bottomRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // FIXED: nullable textarea ref
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
   const streamRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -59,13 +92,15 @@ export default function App() {
       setIsMobile(mobile)
       setSidebarOpen(!mobile)
     }
+
     check()
     window.addEventListener('resize', check)
+
     return () => window.removeEventListener('resize', check)
   }, [])
 
   useEffect(() => {
-    const t = setInterval(() => setTick(p => !p), 530)
+    const t = setInterval(() => setTick((p) => !p), 530)
     return () => clearInterval(t)
   }, [])
 
@@ -75,96 +110,202 @@ export default function App() {
 
   const streamText = useCallback((fullText: string, msgId: number) => {
     setStreaming(true)
+
     let i = 0
+
     const tick = () => {
       i += Math.floor(Math.random() * 4) + 1
+
       const chunk = fullText.slice(0, Math.min(i, fullText.length))
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, displayText: chunk } : m))
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId ? { ...m, displayText: chunk } : m
+        )
+      )
+
       if (i < fullText.length) {
         streamRef.current = setTimeout(tick, 14 + Math.random() * 12)
       } else {
-        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, displayText: fullText } : m))
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === msgId
+              ? { ...m, displayText: fullText }
+              : m
+          )
+        )
+
         setStreaming(false)
       }
     }
+
     tick()
   }, [])
 
   const send = async (text: string) => {
     const trimmed = text.trim()
+
     if (!trimmed || thinking || streaming) return
+
     const d = now()
+
     const userMsg: Message = {
-      id: Date.now(), role: 'user',
-      text: trimmed, displayText: trimmed,
-      time: fmtTime(d), date: fmtDate(d), liked: false, copied: false,
+      id: Date.now(),
+      role: 'user',
+      text: trimmed,
+      displayText: trimmed,
+      time: fmtTime(d),
+      date: fmtDate(d),
+      liked: false,
+      copied: false,
     }
-    setMessages(prev => [...prev, userMsg])
+
+    setMessages((prev) => [...prev, userMsg])
+
     setInput('')
     setApiError('')
+
     if (isMobile) setSidebarOpen(false)
-    if (textareaRef.current) textareaRef.current.style.height = '44px'
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '44px'
+    }
+
     setThinking(true)
 
     try {
-      const history = [...messages, userMsg].map(m => ({
+      const history = [...messages, userMsg].map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.text }],
       }))
+
       const res = await fetch(GEMINI_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ contents: history }),
       })
+
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err?.error?.message || `Request failed (${res.status})`)
+
+        throw new Error(
+          err?.error?.message || `Request failed (${res.status})`
+        )
       }
+
       const data = await res.json()
-      const reply: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No response received.'
+
+      const reply: string =
+        data.candidates?.[0]?.content?.parts?.[0]?.text ??
+        'No response received.'
+
       const d2 = now()
       const aiId = Date.now() + 1
-      setMessages(prev => [...prev, {
-        id: aiId, role: 'assistant',
-        text: reply, displayText: '',
-        time: fmtTime(d2), date: fmtDate(d2), liked: false, copied: false,
-      }])
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: aiId,
+          role: 'assistant',
+          text: reply,
+          displayText: '',
+          time: fmtTime(d2),
+          date: fmtDate(d2),
+          liked: false,
+          copied: false,
+        },
+      ])
+
       setThinking(false)
       streamText(reply, aiId)
     } catch (err: unknown) {
       setThinking(false)
-      setApiError(err instanceof Error ? err.message : 'Something went wrong.')
+
+      setApiError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong.'
+      )
     }
   }
 
-  const toggleLike = (id: number) =>
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, liked: !m.liked } : m))
+  const toggleLike = (id: number) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, liked: !m.liked }
+          : m
+      )
+    )
+  }
 
   const copyMsg = (id: number, text: string) => {
     navigator.clipboard.writeText(text)
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, copied: true } : m))
-    setTimeout(() => setMessages(prev => prev.map(m => m.id === id ? { ...m, copied: false } : m)), 1800)
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, copied: true }
+          : m
+      )
+    )
+
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, copied: false }
+            : m
+        )
+      )
+    }, 1800)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) }
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      send(input)
+    }
   }
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setInput(e.target.value)
+
     const ta = textareaRef.current
-    if (ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 180) + 'px' }
+
+    if (ta) {
+      ta.style.height = 'auto'
+      ta.style.height = Math.min(ta.scrollHeight, 180) + 'px'
+    }
   }
 
   const grouped: { date: string; msgs: Message[] }[] = []
-  messages.forEach(m => {
+
+  messages.forEach((m) => {
     const last = grouped[grouped.length - 1]
-    if (last && last.date === m.date) last.msgs.push(m)
-    else grouped.push({ date: m.date, msgs: [m] })
+
+    if (last && last.date === m.date) {
+      last.msgs.push(m)
+    } else {
+      grouped.push({ date: m.date, msgs: [m] })
+    }
   })
 
   const empty = messages.length === 0
 
   return (
+    <>
+      {/* YOUR JSX UI CONTINUES HERE */}
+    </>
+  )
+}
+
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
